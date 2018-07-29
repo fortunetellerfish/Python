@@ -1,0 +1,30 @@
+ALTER FUNCTION [fn_Text2Table]
+  (@text VARCHAR(MAX)
+  ,@delimeter VARCHAR(100)=',' --default to comma delimited.
+  )
+ RETURNS @outputTable TABLE([text] VARCHAR(200)  )
+AS
+
+
+BEGIN
+ DECLARE @xml xml;
+ SET @xml = N'<table><tr>' + replace(@text, @delimeter,'</tr><tr>') + '</tr></table>';
+
+
+With generateTablefromXML
+as
+(
+     SELECT 
+    [tr].value('.', 'NVARCHAR(200)') AS [text]
+     FROM @xml.nodes('//table/tr') AS [table]([tr])
+)
+ INSERT INTO @outputTable ([text])
+     
+	 SELECT DISTINCT
+	  [text] 
+	  FROM generateTablefromXML
+	  ORDER BY [text]	 ;
+ RETURN;
+END;
+GO
+
